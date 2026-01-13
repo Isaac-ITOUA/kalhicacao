@@ -1,4 +1,5 @@
 import { Heart } from "lucide-react";
+import logoKalhi from "@/assets/logo-kalhi.png";
 
 const Footer = () => {
   return (
@@ -8,11 +9,10 @@ const Footer = () => {
           {/* Logo & Copyright */}
           <div className="text-center md:text-left">
             <div className="flex items-center justify-center md:justify-start gap-2 mb-2">
-              <span className="text-2xl">🍫</span>
-              <span className="font-display font-bold text-xl">Cacao Ouesso</span>
+              <img src={logoKalhi} alt="KALHI" className="h-10 w-auto brightness-0 invert" />
             </div>
             <p className="text-background/60 text-sm">
-              © {new Date().getFullYear()} Cacao Ouesso. Tous droits réservés.
+              © {new Date().getFullYear()} KALHI. Tous droits réservés.
             </p>
           </div>
 
