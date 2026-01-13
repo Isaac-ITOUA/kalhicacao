@@ -82,7 +82,15 @@ const ProductsSection = () => {
                   ))}
                 </div>
 
-                <Button variant="cacao" className="w-full" size="lg">
+                <Button 
+                  variant="cacao" 
+                  className="w-full" 
+                  size="lg"
+                  onClick={() => {
+                    const contactSection = document.getElementById('contact');
+                    contactSection?.scrollIntoView({ behavior: 'smooth' });
+                  }}
+                >
                   <ShoppingBag className="w-5 h-5 mr-2" />
                   Commander
                 </Button>
