@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
+import logoKalhi from "@/assets/logo-kalhi.png";
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -31,13 +32,13 @@ const Navbar = () => {
         <div className="flex items-center justify-between">
           {/* Logo */}
           <a href="#" className="flex items-center gap-2">
-            <span className="text-2xl">🍫</span>
+            <img src={logoKalhi} alt="KALHI" className="h-10 w-10 object-contain" />
             <span
               className={`font-display font-bold text-xl transition-colors ${
                 isScrolled ? "text-foreground" : "text-cream"
               }`}
             >
-              Cacao Ouesso
+              KALHI
             </span>
           </a>
 
