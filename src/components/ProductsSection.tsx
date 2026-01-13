@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import cacaoImage from "@/assets/cacao-product.jpg";
 import eggsImage from "@/assets/eggs-product.jpg";
 import { Button } from "@/components/ui/button";
@@ -23,6 +24,8 @@ const products = [
 ];
 
 const ProductsSection = () => {
+  const navigate = useNavigate();
+
   return (
     <section id="products" className="py-24 bg-gradient-warm">
       <div className="container mx-auto px-6">
@@ -86,10 +89,7 @@ const ProductsSection = () => {
                   variant="cacao" 
                   className="w-full" 
                   size="lg"
-                  onClick={() => {
-                    const contactSection = document.getElementById('contact');
-                    contactSection?.scrollIntoView({ behavior: 'smooth' });
-                  }}
+                  onClick={() => navigate('/contact')}
                 >
                   <ShoppingBag className="w-5 h-5 mr-2" />
                   Commander
