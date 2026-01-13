@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
 import logoKalhi from "@/assets/logo-kalhi.png";
@@ -6,6 +7,8 @@ import logoKalhi from "@/assets/logo-kalhi.png";
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -16,7 +19,19 @@ const Navbar = () => {
   }, []);
 
   const scrollToSection = (id: string) => {
-    document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+    if (location.pathname !== "/") {
+      navigate("/");
+      setTimeout(() => {
+        document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+      }, 100);
+    } else {
+      document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+    }
+    setIsMobileMenuOpen(false);
+  };
+
+  const goToContact = () => {
+    navigate("/contact");
     setIsMobileMenuOpen(false);
   };
 
@@ -44,23 +59,34 @@ const Navbar = () => {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-8">
-            {["products", "about", "contact"].map((item) => (
-              <button
-                key={item}
-                onClick={() => scrollToSection(item)}
-                className={`font-medium transition-colors hover:text-gold ${
-                  isScrolled ? "text-foreground" : "text-cream"
-                }`}
-              >
-                {item === "products" && "Produits"}
-                {item === "about" && "Notre Histoire"}
-                {item === "contact" && "Contact"}
-              </button>
-            ))}
+            <button
+              onClick={() => scrollToSection("products")}
+              className={`font-medium transition-colors hover:text-gold ${
+                isScrolled ? "text-foreground" : "text-cream"
+              }`}
+            >
+              Produits
+            </button>
+            <button
+              onClick={() => scrollToSection("about")}
+              className={`font-medium transition-colors hover:text-gold ${
+                isScrolled ? "text-foreground" : "text-cream"
+              }`}
+            >
+              Notre Histoire
+            </button>
+            <button
+              onClick={goToContact}
+              className={`font-medium transition-colors hover:text-gold ${
+                isScrolled ? "text-foreground" : "text-cream"
+              }`}
+            >
+              Contact
+            </button>
             <Button
               variant={isScrolled ? "cacao" : "hero"}
               size="default"
-              onClick={() => scrollToSection("contact")}
+              onClick={goToContact}
             >
               Commander
             </Button>
@@ -79,20 +105,31 @@ const Navbar = () => {
         {isMobileMenuOpen && (
           <div className="md:hidden mt-4 py-4 border-t border-border/20 animate-fade-in">
             <div className="flex flex-col gap-4">
-              {["products", "about", "contact"].map((item) => (
-                <button
-                  key={item}
-                  onClick={() => scrollToSection(item)}
-                  className={`text-left font-medium py-2 ${
-                    isScrolled ? "text-foreground" : "text-cream"
-                  }`}
-                >
-                  {item === "products" && "Produits"}
-                  {item === "about" && "Notre Histoire"}
-                  {item === "contact" && "Contact"}
-                </button>
-              ))}
-              <Button variant="cacao" onClick={() => scrollToSection("contact")}>
+              <button
+                onClick={() => scrollToSection("products")}
+                className={`text-left font-medium py-2 ${
+                  isScrolled ? "text-foreground" : "text-cream"
+                }`}
+              >
+                Produits
+              </button>
+              <button
+                onClick={() => scrollToSection("about")}
+                className={`text-left font-medium py-2 ${
+                  isScrolled ? "text-foreground" : "text-cream"
+                }`}
+              >
+                Notre Histoire
+              </button>
+              <button
+                onClick={goToContact}
+                className={`text-left font-medium py-2 ${
+                  isScrolled ? "text-foreground" : "text-cream"
+                }`}
+              >
+                Contact
+              </button>
+              <Button variant="cacao" onClick={goToContact}>
                 Commander
               </Button>
             </div>
