@@ -43,7 +43,7 @@ const AboutSection = () => {
             {/* Stats Card */}
             <div className="absolute -bottom-6 -right-6 bg-card p-6 rounded-xl shadow-elevated border border-border">
               <div className="text-center">
-                <span className="text-4xl font-display font-bold text-primary">2</span>
+                <span className="text-2xl font-display font-bold text-primary">Plusieurs</span>
                 <span className="text-lg text-primary ml-1">ha</span>
                 <p className="text-sm text-muted-foreground mt-1">de plantation</p>
               </div>
@@ -63,7 +63,7 @@ const AboutSection = () => {
             
             <p className="text-muted-foreground text-lg mb-6 leading-relaxed">
               Située au cœur de la forêt équatoriale à <strong className="text-foreground">Ouesso, Congo-Brazzaville</strong>, 
-              notre exploitation familiale s'étend sur 2 hectares de cacaoyers et abrite un élevage de poules pondeuses.
+              notre exploitation familiale s'étend sur plusieurs hectares de cacaoyers et abrite un élevage de poules pondeuses.
             </p>
             
             <p className="text-muted-foreground mb-8 leading-relaxed">
