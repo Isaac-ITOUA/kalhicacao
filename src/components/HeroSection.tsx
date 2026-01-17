@@ -33,7 +33,7 @@ const HeroSection = () => {
           </h1>
           
           <p className="text-lg md:text-xl text-cream/90 mb-10 max-w-2xl mx-auto font-body animate-fade-in" style={{ animationDelay: "0.4s" }}>
-            Découvrez les saveurs authentiques de nos 2 hectares de cacao 
+            Découvrez les saveurs authentiques de nos plusieurs hectares de cacao 
             et nos œufs frais issus de notre élevage traditionnel.
           </p>
           
