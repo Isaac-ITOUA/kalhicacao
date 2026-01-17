@@ -46,7 +46,7 @@ const Navbar = () => {
       <div className="container mx-auto px-6">
         <div className="flex items-center justify-between">
           {/* Logo */}
-          <a href="#" className="flex items-center gap-2">
+          <button onClick={() => navigate("/")} className="flex items-center gap-2">
             <img src={logoKalhi} alt="KALHI" className="h-10 w-10 object-contain" />
             <span
               className={`font-display font-bold text-xl transition-colors ${
@@ -55,7 +55,7 @@ const Navbar = () => {
             >
               KALHI
             </span>
-          </a>
+          </button>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-8">
