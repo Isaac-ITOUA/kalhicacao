@@ -1,19 +1,62 @@
 import { Button } from "@/components/ui/button";
-import { Phone, Mail, MapPin, Send } from "lucide-react";
+import { Phone, Mail, MapPin, Send, Loader2 } from "lucide-react";
 import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 const ContactSection = () => {
+  const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
-    name: "",
+    firstName: "",
+    lastName: "",
     email: "",
+    phone: "",
+    address: "",
     product: "",
     message: "",
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle form submission
-    console.log("Form submitted:", formData);
+    setIsSubmitting(true);
+
+    try {
+      const { error } = await supabase.from("customer_orders").insert({
+        first_name: formData.firstName,
+        last_name: formData.lastName,
+        email: formData.email,
+        phone: formData.phone || null,
+        address: formData.address || null,
+        product: formData.product || null,
+        message: formData.message || null,
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Message envoyé !",
+        description: "Nous vous répondrons dans les plus brefs délais.",
+      });
+
+      setFormData({
+        firstName: "",
+        lastName: "",
+        email: "",
+        phone: "",
+        address: "",
+        product: "",
+        message: "",
+      });
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Une erreur est survenue. Veuillez réessayer.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -76,18 +119,35 @@ const ContactSection = () => {
             </h3>
             
             <form onSubmit={handleSubmit} className="space-y-5">
-              <div>
-                <label htmlFor="name" className="block text-sm font-medium mb-2">
-                  Nom complet
-                </label>
-                <input
-                  type="text"
-                  id="name"
-                  className="w-full px-4 py-3 rounded-lg border border-border bg-background focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
-                  placeholder="Votre nom"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="firstName" className="block text-sm font-medium mb-2">
+                    Prénom
+                  </label>
+                  <input
+                    type="text"
+                    id="firstName"
+                    required
+                    className="w-full px-4 py-3 rounded-lg border border-border bg-background focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
+                    placeholder="Votre prénom"
+                    value={formData.firstName}
+                    onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="lastName" className="block text-sm font-medium mb-2">
+                    Nom
+                  </label>
+                  <input
+                    type="text"
+                    id="lastName"
+                    required
+                    className="w-full px-4 py-3 rounded-lg border border-border bg-background focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
+                    placeholder="Votre nom"
+                    value={formData.lastName}
+                    onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                  />
+                </div>
               </div>
 
               <div>
@@ -97,10 +157,39 @@ const ContactSection = () => {
                 <input
                   type="email"
                   id="email"
+                  required
                   className="w-full px-4 py-3 rounded-lg border border-border bg-background focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
                   placeholder="votre@email.com"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                />
+              </div>
+
+              <div>
+                <label htmlFor="phone" className="block text-sm font-medium mb-2">
+                  Téléphone
+                </label>
+                <input
+                  type="tel"
+                  id="phone"
+                  className="w-full px-4 py-3 rounded-lg border border-border bg-background focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
+                  placeholder="+242 XX XXX XX XX"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                />
+              </div>
+
+              <div>
+                <label htmlFor="address" className="block text-sm font-medium mb-2">
+                  Adresse
+                </label>
+                <input
+                  type="text"
+                  id="address"
+                  className="w-full px-4 py-3 rounded-lg border border-border bg-background focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
+                  placeholder="Votre adresse"
+                  value={formData.address}
+                  onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                 />
               </div>
 
@@ -135,9 +224,13 @@ const ContactSection = () => {
                 />
               </div>
 
-              <Button variant="cacao" size="lg" className="w-full">
-                <Send className="w-5 h-5 mr-2" />
-                Envoyer le message
+              <Button variant="cacao" size="lg" className="w-full" disabled={isSubmitting}>
+                {isSubmitting ? (
+                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                ) : (
+                  <Send className="w-5 h-5 mr-2" />
+                )}
+                {isSubmitting ? "Envoi en cours..." : "Envoyer le message"}
               </Button>
             </form>
           </div>
