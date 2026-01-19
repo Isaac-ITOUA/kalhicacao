@@ -90,6 +90,14 @@ const Navbar = () => {
             >
               Commander
             </Button>
+            <Button
+              variant="outline"
+              size="default"
+              onClick={() => navigate("/admin")}
+              className={isScrolled ? "" : "border-cream/50 text-cream hover:bg-cream/10"}
+            >
+              Administrateurs
+            </Button>
           </div>
 
           {/* Mobile Menu Button */}
@@ -131,6 +139,9 @@ const Navbar = () => {
               </button>
               <Button variant="cacao" onClick={goToContact}>
                 Commander
+              </Button>
+              <Button variant="outline" onClick={() => navigate("/admin")}>
+                Administrateurs
               </Button>
             </div>
           </div>
