@@ -23,7 +23,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
-import { Check, X, Trash2, LogOut, RefreshCw } from "lucide-react";
+import { Check, X, Trash2, LogOut, RefreshCw, Loader2 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
@@ -39,24 +39,58 @@ interface Order {
   address: string | null;
   product: string | null;
   message: string | null;
-  status?: OrderStatus;
+  status: OrderStatus;
 }
 
 const AdminDashboard = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [orderStatuses, setOrderStatuses] = useState<Record<string, OrderStatus>>({});
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
-    const isAuthenticated = sessionStorage.getItem("isAdminAuthenticated");
-    if (!isAuthenticated) {
-      navigate("/admin");
-      return;
-    }
-    fetchOrders();
-  }, [navigate]);
+    const checkAuthAndFetch = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        navigate("/admin");
+        return;
+      }
+
+      // Check if user has admin role
+      const { data: roleData, error: roleError } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", session.user.id)
+        .eq("role", "admin")
+        .single();
+
+      if (roleError || !roleData) {
+        toast({
+          title: "Accès refusé",
+          description: "Vous n'avez pas les droits d'administrateur",
+          variant: "destructive",
+        });
+        await supabase.auth.signOut();
+        navigate("/admin");
+        return;
+      }
+
+      setIsCheckingAuth(false);
+      fetchOrders();
+    };
+
+    checkAuthAndFetch();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event) => {
+      if (event === 'SIGNED_OUT') {
+        navigate("/admin");
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [navigate, toast]);
 
   const fetchOrders = async () => {
     setIsLoading(true);
@@ -72,25 +106,32 @@ const AdminDashboard = () => {
         variant: "destructive",
       });
     } else {
-      setOrders(data || []);
-      // Initialize statuses from localStorage
-      const savedStatuses = localStorage.getItem("orderStatuses");
-      if (savedStatuses) {
-        setOrderStatuses(JSON.parse(savedStatuses));
-      }
+      setOrders((data as Order[]) || []);
     }
     setIsLoading(false);
   };
 
-  const updateOrderStatus = (orderId: string, status: OrderStatus) => {
-    const newStatuses = { ...orderStatuses, [orderId]: status };
-    setOrderStatuses(newStatuses);
-    localStorage.setItem("orderStatuses", JSON.stringify(newStatuses));
-    
-    toast({
-      title: status === "validated" ? "Commande validée" : "Commande annulée",
-      description: `La commande a été ${status === "validated" ? "validée" : "annulée"} avec succès`,
-    });
+  const updateOrderStatus = async (orderId: string, status: OrderStatus) => {
+    const { error } = await supabase
+      .from("customer_orders")
+      .update({ status })
+      .eq("id", orderId);
+
+    if (error) {
+      toast({
+        title: "Erreur",
+        description: "Impossible de mettre à jour le statut",
+        variant: "destructive",
+      });
+    } else {
+      setOrders(orders.map(order => 
+        order.id === orderId ? { ...order, status } : order
+      ));
+      toast({
+        title: status === "validated" ? "Commande validée" : "Commande annulée",
+        description: `La commande a été ${status === "validated" ? "validée" : "annulée"} avec succès`,
+      });
+    }
   };
 
   const deleteOrder = async (orderId: string) => {
@@ -107,11 +148,6 @@ const AdminDashboard = () => {
       });
     } else {
       setOrders(orders.filter((order) => order.id !== orderId));
-      const newStatuses = { ...orderStatuses };
-      delete newStatuses[orderId];
-      setOrderStatuses(newStatuses);
-      localStorage.setItem("orderStatuses", JSON.stringify(newStatuses));
-      
       toast({
         title: "Commande supprimée",
         description: "La commande a été supprimée avec succès",
@@ -119,13 +155,12 @@ const AdminDashboard = () => {
     }
   };
 
-  const handleLogout = () => {
-    sessionStorage.removeItem("isAdminAuthenticated");
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
     navigate("/admin");
   };
 
-  const getStatusBadge = (orderId: string) => {
-    const status = orderStatuses[orderId] || "pending";
+  const getStatusBadge = (status: OrderStatus) => {
     switch (status) {
       case "validated":
         return <Badge className="bg-green-500 hover:bg-green-600">Validée</Badge>;
@@ -145,6 +180,14 @@ const AdminDashboard = () => {
       minute: "2-digit",
     });
   };
+
+  if (isCheckingAuth) {
+    return (
+      <div className="min-h-screen bg-cream flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-cacao" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-cream flex flex-col">
@@ -212,7 +255,7 @@ const AdminDashboard = () => {
                         <TableCell className="max-w-xs truncate">
                           {order.message || "-"}
                         </TableCell>
-                        <TableCell>{getStatusBadge(order.id)}</TableCell>
+                        <TableCell>{getStatusBadge(order.status)}</TableCell>
                         <TableCell>
                           <div className="flex items-center justify-end gap-2">
                             <Button
@@ -220,7 +263,7 @@ const AdminDashboard = () => {
                               variant="outline"
                               className="text-green-600 hover:text-green-700 hover:bg-green-50"
                               onClick={() => updateOrderStatus(order.id, "validated")}
-                              disabled={orderStatuses[order.id] === "validated"}
+                              disabled={order.status === "validated"}
                             >
                               <Check className="w-4 h-4" />
                             </Button>
@@ -229,7 +272,7 @@ const AdminDashboard = () => {
                               variant="outline"
                               className="text-orange-600 hover:text-orange-700 hover:bg-orange-50"
                               onClick={() => updateOrderStatus(order.id, "cancelled")}
-                              disabled={orderStatuses[order.id] === "cancelled"}
+                              disabled={order.status === "cancelled"}
                             >
                               <X className="w-4 h-4" />
                             </Button>

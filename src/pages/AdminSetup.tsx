@@ -1,116 +1,84 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Lock, Mail, Loader2 } from "lucide-react";
+import { Lock, Mail, UserPlus, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
-const AdminLogin = () => {
+const AdminSetup = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        // Check if user has admin role
-        const { data: roleData } = await supabase
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", session.user.id)
-          .eq("role", "admin")
-          .single();
-        
-        if (roleData) {
-          navigate("/admin/dashboard");
-        }
-      }
-      setIsCheckingAuth(false);
-    };
-    
-    checkAuth();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN' && session) {
-        const { data: roleData } = await supabase
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", session.user.id)
-          .eq("role", "admin")
-          .single();
-        
-        if (roleData) {
-          navigate("/admin/dashboard");
-        }
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [navigate]);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (password !== confirmPassword) {
+      toast({
+        title: "Erreur",
+        description: "Les mots de passe ne correspondent pas",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (password.length < 6) {
+      toast({
+        title: "Erreur",
+        description: "Le mot de passe doit contenir au moins 6 caractères",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      // Create admin user
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          emailRedirectTo: window.location.origin,
+        }
       });
 
       if (error) throw error;
 
       if (data.user) {
-        // Check if user has admin role
-        const { data: roleData, error: roleError } = await supabase
+        // Assign admin role
+        const { error: roleError } = await supabase
           .from("user_roles")
-          .select("role")
-          .eq("user_id", data.user.id)
-          .eq("role", "admin")
-          .single();
-
-        if (roleError || !roleData) {
-          await supabase.auth.signOut();
-          toast({
-            title: "Accès refusé",
-            description: "Vous n'avez pas les droits d'administrateur",
-            variant: "destructive",
+          .insert({
+            user_id: data.user.id,
+            role: "admin",
           });
-          return;
-        }
+
+        if (roleError) throw roleError;
 
         toast({
-          title: "Connexion réussie",
-          description: "Bienvenue dans l'espace administrateur",
+          title: "Compte administrateur créé",
+          description: "Vous pouvez maintenant vous connecter",
         });
-        navigate("/admin/dashboard");
+        navigate("/admin");
       }
     } catch (error: any) {
       toast({
-        title: "Erreur de connexion",
-        description: error.message || "Identifiants incorrects",
+        title: "Erreur",
+        description: error.message || "Une erreur est survenue",
         variant: "destructive",
       });
     } finally {
       setIsLoading(false);
     }
   };
-
-  if (isCheckingAuth) {
-    return (
-      <div className="min-h-screen bg-cream flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-cacao" />
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-cream flex flex-col">
@@ -120,13 +88,13 @@ const AdminLogin = () => {
           <div className="bg-white rounded-2xl shadow-soft p-8">
             <div className="text-center mb-8">
               <div className="w-16 h-16 bg-cacao/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Lock className="w-8 h-8 text-cacao" />
+                <UserPlus className="w-8 h-8 text-cacao" />
               </div>
               <h1 className="font-display text-2xl font-bold text-cacao">
-                Espace Administrateur
+                Créer un compte Admin
               </h1>
               <p className="text-muted-foreground mt-2">
-                Connectez-vous pour accéder au tableau de bord
+                Créez votre compte administrateur sécurisé
               </p>
             </div>
 
@@ -156,7 +124,23 @@ const AdminLogin = () => {
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Entrez votre mot de passe"
+                    placeholder="Minimum 6 caractères"
+                    className="pl-10"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword">Confirmer le mot de passe</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <Input
+                    id="confirmPassword"
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Confirmer votre mot de passe"
                     className="pl-10"
                     required
                   />
@@ -172,18 +156,18 @@ const AdminLogin = () => {
                 {isLoading ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Connexion...
+                    Création...
                   </>
                 ) : (
-                  "Se connecter"
+                  "Créer le compte"
                 )}
               </Button>
             </form>
 
             <p className="text-center text-sm text-muted-foreground mt-6">
-              Pas encore de compte ?{" "}
-              <a href="/admin/setup" className="text-cacao hover:underline">
-                Créer un compte admin
+              Déjà un compte ?{" "}
+              <a href="/admin" className="text-cacao hover:underline">
+                Se connecter
               </a>
             </p>
           </div>
@@ -194,4 +178,4 @@ const AdminLogin = () => {
   );
 };
 
-export default AdminLogin;
+export default AdminSetup;
